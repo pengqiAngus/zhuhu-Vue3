@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { computed, defineProps, PropType } from "vue";
+import { computed, defineProps, PropType, watch } from "vue";
 import DropDown from "./DropDown.vue";
 import DropDownItem from "./DropDownItem.vue";
-export interface UserProps {
-	isLogin: boolean,
-	name: string,
-	id?: string
-}
+import { GlobalDataProps, UserProps } from "../store";
+import { useStore } from "vuex";
 const props = defineProps({
 	user: {
 		type: Object as PropType<UserProps>,
 		required: true
 	}
 })
+
+const store = useStore<GlobalDataProps>()
+const logout = () => {
+	store.state.user = { isLogin: false }
+	localStorage.removeItem('token')
+}
 </script>
 
 <template>
@@ -24,11 +27,11 @@ const props = defineProps({
 					<router-link to="/login" class="btn btn-outline-light my-2">登录</router-link>
 				</li>
 				<li class="list-inline-item">
-					<router-link to="/login" class="btn btn-outline-light my-2">注册</router-link>
+					<router-link to="/register" class="btn btn-outline-light my-2">注册</router-link>
 				</li>
 			</ul>
 			<ul v-else class="list-inline mb-0">
-				<DropDown :title="user.name">
+				<DropDown :title="user.nickName || ''">
 					<DropDownItem>
 						<router-link class="dropdown-item" to="/createPost">新建文章</router-link>
 					</DropDownItem>
@@ -36,7 +39,7 @@ const props = defineProps({
 						<router-link class="dropdown-item" to="/login">编辑资料</router-link>
 					</DropDownItem>
 					<DropDownItem>
-						<router-link class="dropdown-item" to="/login">退出登录</router-link>
+						<router-link class="dropdown-item" to="/login" v-on:click="logout">退出登录</router-link>
 					</DropDownItem>
 				</DropDown>
 			</ul>

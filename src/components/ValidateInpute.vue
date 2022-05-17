@@ -12,8 +12,9 @@ export default defineComponent({
 import { rule } from "postcss";
 import { PropType, reactive } from "vue";
 interface RuleProp {
-	type: 'required' | 'email',
-	message: string
+	type: 'required' | 'email' | 'custom',
+	message: string;
+	validator?: () => boolean
 }
 export type RulesProp = RuleProp[]
 export type TagType = 'input' | 'textarea'
@@ -58,6 +59,9 @@ const validateInput = () => {
 					break;
 				case 'email':
 					passed = emailReg.test(inputRef.val)
+					break
+				case 'custom':
+					passed = r.validator ? r.validator() : true
 					break
 				default:
 					break;

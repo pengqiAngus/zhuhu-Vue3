@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "./views/Home.vue";
 import Login from "./views/Login.vue";
+import register from "./views/register.vue";
 import ColumnDetail from "./components/ColumnDetail.vue";
 import CreatePost from "./views/CreatePost.vue";
 import store from "./store";
@@ -21,6 +22,12 @@ const router = createRouter({
       meta: {
         redirectAlreadyLogin: true,
       },
+    },
+    {
+      path: "/register",
+      name: "register",
+      component: register,
+      meta: {},
     },
     {
       path: "/columnDetail/:id",
