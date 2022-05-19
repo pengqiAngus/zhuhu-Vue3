@@ -1,12 +1,16 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import { createStore, Commit } from "vuex";
+import { arrToObj, objToArr } from "./hooks/useHelper";
+interface ListProps<P> {
+  [id: string]: P;
+}
 export interface ResponseType<P = {}> {
   code: number;
   msg: string;
   data: P;
 }
 export interface UserProps {
-  isLogin: boolean;
+  isLogin?: boolean;
   nickName?: string;
   _id?: string;
   column?: string;
@@ -24,14 +28,14 @@ export interface ColumnProps {
   description: string;
 }
 export interface PostProps {
-  _id?: number;
+  _id?: string;
   title: string;
   content?: string;
   excerpt?: string;
   image?: ImageProps | string;
   createdAt?: string;
   column: string;
-  author?: string;
+  author?: UserProps;
 }
 export interface GlobalErrorProps {
   status: Boolean;
@@ -41,8 +45,8 @@ export interface GlobalDataProps {
   error: GlobalErrorProps;
   token: String;
   loading: boolean;
-  columns: ColumnProps[];
-  posts: PostProps[];
+  columns: ListProps<ColumnProps>;
+  posts: ListProps<PostProps>;
   user: UserProps;
 }
 
@@ -65,13 +69,23 @@ const postAndCommit = async (
   commit(mutationName, data);
   return data;
 };
+const asyncAndCommit = async (
+  url: string,
+  mutationName: string,
+  commit: Commit,
+  config: AxiosRequestConfig = { method: "get" }
+) => {
+  const { data } = await axios(url, config);
+  commit(mutationName, data);
+  return data;
+};
 const store = createStore<GlobalDataProps>({
   state: {
     error: { status: false },
     token: localStorage.getItem("token") || "",
     loading: false,
-    columns: [],
-    posts: [],
+    columns: {},
+    posts: {},
     user: { isLogin: false },
   },
   mutations: {
@@ -82,18 +96,26 @@ const store = createStore<GlobalDataProps>({
       state.error = e;
     },
     createPost(state, newPost) {
-      state.posts.push(newPost);
+      state.posts[newPost._id] = newPost;
     },
     fetchColumns(state, data) {
-      state.columns = data.data.list;
+      state.columns = arrToObj(data.data.list);
     },
     fetchColumn(state, data) {
-      state.columns = [data.data];
+      state.columns[data.data._id] = data.data;
     },
     fetchPosts(state, data) {
-      state.posts = data.data.list;
+      state.posts = arrToObj(data.data.list);
     },
-    fetchPost(state, data) {},
+    fetchPost(state, data) {
+      state.posts[data.data._id] = data.data;
+    },
+    deletePost(state, { data }) {
+      delete state.posts[data._id];
+    },
+    updataPost(state, { data }) {
+      state.posts[data._id] = data;
+    },
     fetchCurrentUser(state, data) {
       state.user = { isLogin: true, ...data.data };
     },
@@ -114,7 +136,7 @@ const store = createStore<GlobalDataProps>({
   },
   actions: {
     fetchColumns({ commit }) {
-      return getAndCommit("/columns", "fetchColumns", commit);
+      return getAndCommit(`/columns?pageSize=20`, "fetchColumns", commit);
     },
     fetchColumn({ commit }, id) {
       return getAndCommit(`/columns/${id}`, "fetchColumn", commit);
@@ -128,8 +150,19 @@ const store = createStore<GlobalDataProps>({
     createPost({ commit }, playload) {
       return postAndCommit("/posts", "createPost", commit, playload);
     },
+    deletePost({ commit }, id) {
+      return asyncAndCommit(`/posts/${id}`, "deletePost", commit, {
+        method: "delete",
+      });
+    },
     fetchPost({ commit }, id) {
       return getAndCommit(`/posts/${id}`, "fetchPost", commit);
+    },
+    updatePost({ commit }, { id, playload }) {
+      return asyncAndCommit(`/posts/${id}`, "updataPost", commit, {
+        method: "patch",
+        data: playload,
+      });
     },
     register({ commit }, playload) {
       return postAndCommit(`users`, "register", commit, playload);
@@ -144,15 +177,18 @@ const store = createStore<GlobalDataProps>({
     },
   },
   getters: {
+    getColumns: (state) => {
+      return objToArr(state.columns);
+    },
     getColumnById: (state) => (id: number) => {
-      return state.columns.find((c) => c._id === id);
+      return state.columns[id];
     },
     getPostsById: (state) => (id: number) => {
-      const posts = state.posts.filter((p) => p.column === id);
+      const posts = objToArr(state.posts).filter((p) => p.column === id);
       return posts;
     },
     getPostById: (state) => (id: number) => {
-      const post = state.posts.find((p) => (p._id = id));
+      const post = state.posts[id];
       return post;
     },
   },

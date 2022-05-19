@@ -37,7 +37,7 @@ const router = createRouter({
     },
     {
       path: "/createPost",
-      name: "CreatePost",
+      name: "createPost",
       component: CreatePost,
       meta: {
         requireLogin: true,

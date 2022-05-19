@@ -38,10 +38,8 @@ export default defineComponent({
 			store.dispatch('fetchColumns')
 		})
 		const store = useStore<GlobalDataProps>()
-		const list = computed(() => {
-			return store.state.columns
-		})
-		const biggerc = computed(() => store.getters.biggerColumnsLength)
+		const list = computed(() => store.getters.getColumns)
+
 		const beforeUploader = (file: File) => {
 			const isJPG = file.type === 'image/jpeg'
 			if (!isJPG) {
@@ -59,7 +57,7 @@ export default defineComponent({
 			}
 		}
 		return {
-			list, biggerc, beforeUploader, onFileUploaded, clearImage, uploadRef
+			list, beforeUploader, onFileUploaded, clearImage, uploadRef
 		}
 	}
 })

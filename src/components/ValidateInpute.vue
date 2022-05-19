@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, onMounted, ref } from "vue";
+import { computed, defineComponent, onMounted, ref } from "vue";
 import { emitter } from './ValidateForm.vue'
 /* eslint vue/no-ref-as-operand: off */
 export default defineComponent({
@@ -35,16 +35,16 @@ const emit = defineEmits([]);
 
 const emailReg = /^[0-9a-zA-Z_.-]+[@][0-9a-zA-Z_.-]+([.][a-zA-Z]+){1,2}$/;
 const inputRef = reactive({
-	val: props.modelValue || '',
+	val: computed({
+		get: () => props.modelValue || '',
+		set: val => {
+			emit('update:modelValue', val)
+		}
+	}),
 	error: false,
 	message: ''
 })
 const refInput = ref<any>()
-const updateValue = (e) => {
-	const targetValue = (e.target as HTMLInputElement).value
-	inputRef.val = targetValue
-	emit('update:modelValue', targetValue)
-}
 const emptyValue = () => {
 	inputRef.val = ''
 }
@@ -73,7 +73,7 @@ const validateInput = () => {
 	}
 	return true
 }
-defineExpose({ validateInput, updateValue, emptyValue })
+defineExpose({ validateInput, emptyValue })
 
 onMounted(() => {
 	emitter.emit('form-item', validateInput)
@@ -83,9 +83,9 @@ onMounted(() => {
 <template>
 	<div class="validate-input-container pb3">
 		<input v-if="props.tag !== 'textarea'" :class="{ 'is-invalid': inputRef.error }" v-bind="$attrs"
-			class="form-control" :value="inputRef.val" @input="updateValue" @blur="validateInput" />
+			v-model="inputRef.val" class="form-control" @blur="validateInput" />
 		<textarea v-else :class="{ 'is-invalid': inputRef.error }" v-bind="$attrs" class="form-control"
-			:value="inputRef.val" @input="updateValue" @blur="validateInput" />
+			v-model="inputRef.val" @blur="validateInput" />
 		<span v-if="inputRef.error" class="invalid-feedback">{{ inputRef.message }}</span>
 	</div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from "axios";
-import { ref, defineProps, PropType } from "vue";
+import { ref, defineProps, PropType, watch } from "vue";
 type uploadStatus = 'ready' | 'loading' | 'success' | 'error'
 type checkFunction = (file: File) => boolean
 const props = defineProps({
@@ -10,15 +10,24 @@ const props = defineProps({
 	},
 	beforeUpload: {
 		type: Function as PropType<checkFunction>
+	},
+	uploaded: {
+		type: Object
 	}
 })
 inheritAttrs: false
 const emit = defineEmits(
 	['fileUploaded', 'fileUploadedError']
 )
-const fileStatus = ref<uploadStatus>('ready')
+const fileStatus = ref<uploadStatus>(props.uploaded ? 'success' : 'ready')
 const fileInput = ref<null | HTMLInputElement>(null)
-const uploadedData = ref()
+const uploadedData = ref(props.uploaded)
+watch(() => props.uploaded, (newValue) => {
+	if (newValue) {
+		fileStatus.value = 'success'
+		uploadedData.value = newValue
+	}
+})
 const triggerUpload = () => {
 
 	if (fileInput.value) {
