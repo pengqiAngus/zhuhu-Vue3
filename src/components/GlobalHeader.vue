@@ -4,24 +4,25 @@ import DropDown from "./DropDown.vue";
 import DropDownItem from "./DropDownItem.vue";
 import { GlobalDataProps, UserProps } from "../store";
 import { useStore } from "vuex";
+import axios from "axios";
 const props = defineProps({
 	user: {
 		type: Object as PropType<UserProps>,
 		required: true
 	}
 })
-
 const store = useStore<GlobalDataProps>()
 const logout = () => {
 	store.state.user = { isLogin: false }
 	localStorage.removeItem('token')
+	delete axios.defaults.headers.common.Authorization;
 }
 </script>
 
 <template>
 	<div>
 		<nav class="navbar navbar-dark bg-primary justify-content-between mb-4 px-4">
-			<a class="navbar-brand" href="#">知乎</a>
+			<router-link class="navbar-brand" to="/">知乎</router-link>
 			<ul v-if="!user.isLogin" class="list-inline mb-0">
 				<li class="list-inline-item">
 					<router-link to="/login" class="btn btn-outline-light my-2">登录</router-link>

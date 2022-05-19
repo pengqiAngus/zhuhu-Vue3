@@ -2,7 +2,6 @@
 import { useRoute } from "vue-router"
 import { useStore } from "vuex";
 import { GlobalDataProps } from "../store";
-import { testData, testPosts } from "../views/testData";
 import PostList from "../components/PostList.vue";
 import { computed } from "@vue/reactivity";
 import { onMounted } from "vue";
@@ -13,9 +12,22 @@ const currentId = route.params.id
 onMounted(() => {
 	store.dispatch('fetchColumn', currentId)
 	store.dispatch('fetchPosts', currentId)
+
 })
-const column = computed(() => store.getters.getColumnById(currentId))
-const list = computed(() => store.getters.getPostById(currentId))
+const column = computed(() => {
+	let column = store.getters.getColumnById(currentId)
+
+	if (column) {
+		column.avatar = {
+			url: 'https://webstatic.mihoyo.com/upload/static-resource/2021/11/08/02959a0f179436853c244dfc8b88e4e4_5824090375749016325.jpg'
+		}
+	}
+	return column
+}
+)
+const list = computed(() => store.getters.getPostsById(currentId))
+
+
 
 
 

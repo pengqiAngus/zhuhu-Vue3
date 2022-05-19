@@ -1,5 +1,10 @@
 import axios from "axios";
 import { createStore, Commit } from "vuex";
+export interface ResponseType<P = {}> {
+  code: number;
+  msg: string;
+  data: P;
+}
 export interface UserProps {
   isLogin: boolean;
   nickName?: string;
@@ -7,7 +12,7 @@ export interface UserProps {
   column?: string;
   email?: string;
 }
-interface ImageProps {
+export interface ImageProps {
   _id?: string;
   url?: string;
   createdAt?: string;
@@ -19,13 +24,14 @@ export interface ColumnProps {
   description: string;
 }
 export interface PostProps {
-  _id: number;
+  _id?: number;
   title: string;
   content?: string;
   excerpt?: string;
-  image?: ImageProps;
-  createdAt: string;
+  image?: ImageProps | string;
+  createdAt?: string;
   column: string;
+  author?: string;
 }
 export interface GlobalErrorProps {
   status: Boolean;
@@ -47,6 +53,7 @@ const getAndCommit = async (
 ) => {
   const { data } = await axios.get(url);
   commit(mutationName, data);
+  return data;
 };
 const postAndCommit = async (
   url: string,
@@ -74,7 +81,7 @@ const store = createStore<GlobalDataProps>({
     setError(state, e: GlobalErrorProps) {
       state.error = e;
     },
-    creatPost(state, newPost) {
+    createPost(state, newPost) {
       state.posts.push(newPost);
     },
     fetchColumns(state, data) {
@@ -86,6 +93,7 @@ const store = createStore<GlobalDataProps>({
     fetchPosts(state, data) {
       state.posts = data.data.list;
     },
+    fetchPost(state, data) {},
     fetchCurrentUser(state, data) {
       state.user = { isLogin: true, ...data.data };
     },
@@ -98,19 +106,30 @@ const store = createStore<GlobalDataProps>({
       localStorage.setItem("token", token);
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     },
+    logout(state) {
+      state.token = "";
+      localStorage.removeItem("token");
+      delete axios.defaults.headers.common.Authorization;
+    },
   },
   actions: {
     fetchColumns({ commit }) {
-      getAndCommit("/columns", "fetchColumns", commit);
+      return getAndCommit("/columns", "fetchColumns", commit);
     },
     fetchColumn({ commit }, id) {
-      getAndCommit(`/columns/${id}`, "fetchColumn", commit);
+      return getAndCommit(`/columns/${id}`, "fetchColumn", commit);
     },
     fetchPosts({ commit }, id) {
-      getAndCommit(`/columns/${id}/posts`, "fetchPosts", commit);
+      return getAndCommit(`/columns/${id}/posts`, "fetchPosts", commit);
     },
     fetchCurrentUser({ commit }) {
-      getAndCommit("/user/current", "fetchCurrentUser", commit);
+      return getAndCommit("/user/current", "fetchCurrentUser", commit);
+    },
+    createPost({ commit }, playload) {
+      return postAndCommit("/posts", "createPost", commit, playload);
+    },
+    fetchPost({ commit }, id) {
+      return getAndCommit(`/posts/${id}`, "fetchPost", commit);
     },
     register({ commit }, playload) {
       return postAndCommit(`users`, "register", commit, playload);
@@ -128,9 +147,13 @@ const store = createStore<GlobalDataProps>({
     getColumnById: (state) => (id: number) => {
       return state.columns.find((c) => c._id === id);
     },
-    getPostById: (state) => (id: number) => {
+    getPostsById: (state) => (id: number) => {
       const posts = state.posts.filter((p) => p.column === id);
       return posts;
+    },
+    getPostById: (state) => (id: number) => {
+      const post = state.posts.find((p) => (p._id = id));
+      return post;
     },
   },
 });

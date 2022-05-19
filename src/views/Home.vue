@@ -2,8 +2,12 @@
 	<div class="home-page">
 		<section class="py-5 text-center container">
 			<div class="row py-lg-5">
+
 				<div class="col-lg-6 col-md-8 mx-auto">
 					<img src="../assets/callout.svg" alt="callout" class="w-50" />
+					<div>
+
+					</div>
 					<h2 class="font-weight-light">随心写作，自由表达</h2>
 					{{ biggerc }}
 					<p>
@@ -18,14 +22,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onMounted } from 'vue'
+import { defineComponent, computed, onMounted, ref } from 'vue'
 import { useStore } from "vuex";
-import { GlobalDataProps } from "../store"
+import { GlobalDataProps, ResponseType, ImageProps } from "../store"
 import Column from '../components/Column.vue'
+import uploader from "../components/uploader.vue";
+import useCreateMessage from "../hooks/useCreateMessage"
 export default defineComponent({
 	name: 'Home',
 	components: {
-		Column
+		Column, uploader
 	},
 	setup() {
 		onMounted(() => {
@@ -36,8 +42,24 @@ export default defineComponent({
 			return store.state.columns
 		})
 		const biggerc = computed(() => store.getters.biggerColumnsLength)
+		const beforeUploader = (file: File) => {
+			const isJPG = file.type === 'image/jpeg'
+			if (!isJPG) {
+				useCreateMessage('上传图片只能是JPG格式', 'error')
+			}
+			return isJPG
+		}
+		const onFileUploaded = (data: ResponseType<ImageProps>) => {
+			useCreateMessage(`上传图片ID${data.data._id}`, 'success')
+		}
+		const uploadRef = ref()
+		const clearImage = () => {
+			if (uploadRef.value) {
+				uploadRef.value.clearUpload()
+			}
+		}
 		return {
-			list, biggerc
+			list, biggerc, beforeUploader, onFileUploaded, clearImage, uploadRef
 		}
 	}
 })
