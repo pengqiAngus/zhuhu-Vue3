@@ -71,11 +71,11 @@ router.beforeEach((to, from, next) => {
         .catch((e) => {
           localStorage.removeItem("token");
           store.commit("logout");
-          next("login");
+          next("/login");
         });
     } else {
       if (requireLogin) {
-        next("login");
+        next("/login");
       } else {
         next();
       }

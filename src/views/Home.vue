@@ -9,7 +9,6 @@
 
 					</div>
 					<h2 class="font-weight-light">随心写作，自由表达</h2>
-					{{ biggerc }}
 					<p>
 						<router-link to="/createPost" class="btn btn-primary my-2">开始写文章</router-link>
 					</p>
@@ -18,6 +17,12 @@
 		</section>
 		<h4 class="font-weight-bold text-center">发现精彩</h4>
 		<Column :list="list"></Column>
+		<div class="footer">
+			<button class="btn btn-outline-primary mt-2 mb-5 mx-auto btn-block w-25" @click="loadMorePgae"
+				v-if="!isLastPage">加载更多</button>
+			<h4 style="color:#636e72" v-else>已经没有了!!!!</h4>
+		</div>
+
 	</div>
 </template>
 
@@ -28,37 +33,31 @@ import { GlobalDataProps, ResponseType, ImageProps } from "../store"
 import Column from '../components/Column.vue'
 import uploader from "../components/uploader.vue";
 import useCreateMessage from "../hooks/useCreateMessage"
+import useLoadMore from "../hooks/useLoadMore"
 export default defineComponent({
 	name: 'Home',
 	components: {
 		Column, uploader
 	},
 	setup() {
-		onMounted(() => {
-			store.dispatch('fetchColumns')
-		})
 		const store = useStore<GlobalDataProps>()
+		const total = computed(() => store.state.columns.total)
+		const currentPage = computed(() => store.state.columns.currentPage)
+		onMounted(() => {
+			store.dispatch('fetchColumns', { pageSize: 3 })
+		})
 		const list = computed(() => store.getters.getColumns)
-
-		const beforeUploader = (file: File) => {
-			const isJPG = file.type === 'image/jpeg'
-			if (!isJPG) {
-				useCreateMessage('上传图片只能是JPG格式', 'error')
-			}
-			return isJPG
-		}
-		const onFileUploaded = (data: ResponseType<ImageProps>) => {
-			useCreateMessage(`上传图片ID${data.data._id}`, 'success')
-		}
-		const uploadRef = ref()
-		const clearImage = () => {
-			if (uploadRef.value) {
-				uploadRef.value.clearUpload()
-			}
-		}
+		const { loadMorePgae, isLastPage } = useLoadMore('fetchColumns', total, { currentPage: (currentPage.value ? currentPage.value + 1 : 2), pageSize: 3, })
 		return {
-			list, beforeUploader, onFileUploaded, clearImage, uploadRef
+			list, loadMorePgae, isLastPage
 		}
 	}
 })
 </script>
+<style scoped>
+.footer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+</style>

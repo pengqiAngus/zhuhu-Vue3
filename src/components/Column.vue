@@ -21,7 +21,7 @@ const columnList = computed(() => {
 
 <template>
 	<div class="row">
-		<div class="col-4 mb-3" v-for="column in columnList" :key="column.id">
+		<div class="col-4 mb-3" v-for="column in columnList" :key="column._id">
 			<div class="card h-100 shaow-sm">
 				<div class="card-body text-center">
 					<img class="rounded mx-auto d-block  border border-light w-50 my-3" :src="column.avatar?.url"
